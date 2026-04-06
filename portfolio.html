@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Monolith Protocol</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800;900&family=Barlow:wght@300;400;500;600&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#0a0a0a;--surface:#111;--surface2:#161616;--surface3:#1c1c1c;
+  --border:#1e1e1e;--border2:#2a2a2a;
+  --orange:#ff4800;--orange-dim:rgba(255,72,0,.1);
+  --text:#efefef;--text2:#848484;--text3:#3a3a3a;
+  --mono:'JetBrains Mono',monospace;
+  --display:'Barlow Condensed',sans-serif;
+  --body:'Barlow',sans-serif;
+}
+*,*::before,*::after{cursor:none!important;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:var(--body);overflow-x:hidden;}
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  opacity:.45;mix-blend-mode:overlay;
+}
+::selection{background:var(--orange);color:#000;}
+
+/* CURSOR */
+#cur{position:fixed;width:8px;height:8px;background:var(--orange);border-radius:50%;pointer-events:none;z-index:99998;transform:translate(-50%,-50%);transition:width .25s cubic-bezier(.23,1,.32,1),height .25s cubic-bezier(.23,1,.32,1),background .2s;}
+#cur.grow{width:44px;height:44px;background:transparent;border:1.5px solid var(--orange);opacity:.7;}
+#cur-trail{position:fixed;width:3px;height:3px;background:rgba(255,72,0,.3);border-radius:50%;pointer-events:none;z-index:99997;transform:translate(-50%,-50%);}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:1000;height:58px;display:flex;align-items:center;justify-content:space-between;padding:0 48px;border-bottom:1px solid var(--border);background:rgba(10,10,10,.97);backdrop-filter:blur(20px);}
+.nav-logo{display:flex;align-items:center;gap:11px;font-family:var(--display);font-size:13px;font-weight:700;letter-spacing:5px;text-transform:uppercase;color:var(--text);text-decoration:none;}
+.nav-sq{width:9px;height:9px;background:var(--orange);flex-shrink:0;}
+.nav-r{display:flex;align-items:center;gap:36px;}
+.nav-r a{font-family:var(--body);font-size:13.5px;color:var(--text2);text-decoration:none;letter-spacing:.3px;transition:color .15s;}
+.nav-r a:hover{color:var(--text);}
+.nav-sep{width:1px;height:18px;background:var(--border2);}
+.nav-meta{font-family:var(--mono);font-size:11px;color:var(--text3);letter-spacing:1.5px;}
+
+/* HERO */
+#hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:140px 48px 90px;position:relative;overflow:hidden;}
+#hero::before{content:'';position:absolute;top:-20%;left:-10%;width:60%;height:80%;background:radial-gradient(ellipse,rgba(255,72,0,.04) 0%,transparent 70%);pointer-events:none;}
+.hero-eyebrow{font-family:var(--mono);font-size:10.5px;letter-spacing:5px;text-transform:uppercase;color:var(--orange);margin-bottom:36px;display:flex;align-items:center;gap:14px;opacity:0;animation:up .7s .15s ease forwards;}
+.hero-eyebrow::before{content:'';width:28px;height:1px;background:var(--orange);}
+.hero-title{font-family:var(--display);font-weight:900;font-size:clamp(80px,11.5vw,170px);line-height:.88;letter-spacing:-2px;text-transform:uppercase;opacity:0;animation:up .8s .3s ease forwards;}
+.hero-title .wh{color:var(--text);}
+.hero-title .or{color:var(--orange);}
+.hero-sub{margin-top:48px;max-width:500px;font-size:15px;line-height:1.75;color:var(--text2);opacity:0;animation:up .7s .5s ease forwards;}
+.hero-cta{margin-top:40px;display:flex;align-items:center;gap:20px;opacity:0;animation:up .7s .65s ease forwards;}
+.btn-pri{font-family:var(--mono);font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#000;background:var(--orange);padding:14px 28px;text-decoration:none;display:inline-flex;align-items:center;gap:10px;transition:background .2s,transform .15s;}
+.btn-pri:hover{background:#fff;transform:translateY(-1px);}
+.btn-sec{font-family:var(--mono);font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--text2);text-decoration:none;border-bottom:1px solid var(--border2);padding-bottom:2px;transition:color .2s,border-color .2s;}
+.btn-sec:hover{color:var(--text);border-color:var(--text2);}
+.hero-scroll{position:absolute;bottom:40px;left:48px;font-family:var(--mono);font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--text3);display:flex;align-items:center;gap:10px;opacity:0;animation:up .7s .9s ease forwards;}
+.hero-scroll::before{content:'';width:1px;height:40px;background:linear-gradient(to bottom,var(--orange),transparent);}
+.hero-dot{position:absolute;top:38%;right:22%;width:13px;height:13px;border-radius:50%;background:var(--orange);opacity:0;animation:appear 1s 1s ease forwards,pulse 3s 2s infinite;}
+.hero-rule{position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,var(--orange),transparent 60%);opacity:.35;}
+@keyframes appear{from{opacity:0;transform:scale(.4)}to{opacity:1;transform:scale(1)}}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,72,0,.5);}50%{box-shadow:0 0 0 20px rgba(255,72,0,0);}}
+@keyframes up{from{opacity:0;transform:translateY(28px);}to{opacity:1;transform:translateY(0);}}
+
+/* SECTION LABEL */
+.sec-label{font-family:var(--mono);font-size:10.5px;letter-spacing:4px;text-transform:uppercase;color:var(--orange);display:flex;align-items:center;gap:14px;margin-bottom:56px;}
+.sec-label::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* ABOUT */
+#about{padding:100px 48px;background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:64px;margin-bottom:64px;}
+.about-text{font-family:var(--mono);font-size:13.5px;line-height:2;color:var(--text2);}
+.about-pull{font-family:var(--mono);font-size:12px;line-height:2;color:var(--text3);border-left:2px solid var(--orange);padding-left:20px;align-self:flex-end;}
+.about-pull strong{color:var(--text2);}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);}
+.stat{background:var(--surface2);padding:32px 24px;position:relative;overflow:hidden;transition:background .25s;}
+.stat:hover{background:var(--surface3);}
+.stat::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--orange);transform:scaleX(0);transform-origin:left;transition:transform .3s ease;}
+.stat:hover::after{transform:scaleX(1);}
+.stat-num{font-family:var(--display);font-size:56px;font-weight:900;line-height:1;letter-spacing:-2px;color:var(--text);margin-bottom:12px;}
+.stat-lbl{font-family:var(--mono);font-size:9.5px;letter-spacing:4px;text-transform:uppercase;color:var(--text3);}
+
+/* WORK */
+#work{padding:0;}
+.work-hdr{padding:80px 48px 56px;display:flex;align-items:flex-end;justify-content:space-between;border-bottom:1px solid var(--border);}
+.work-hdr .sec-label{margin-bottom:12px;}
+.work-title{font-family:var(--display);font-size:clamp(42px,5vw,72px);font-weight:900;text-transform:uppercase;letter-spacing:-1px;line-height:.95;}
+.work-title span{color:var(--orange);}
+.work-count{font-family:var(--mono);font-size:11px;color:var(--text3);letter-spacing:2px;text-align:right;padding-bottom:4px;}
+
+/* PROJECT */
+.project{border-bottom:1px solid var(--border);}
+.proj-top{padding:32px 48px 0;display:flex;align-items:center;justify-content:space-between;}
+.proj-num{font-family:var(--mono);font-size:11px;letter-spacing:3px;color:var(--text3);}
+.proj-badge{font-family:var(--mono);font-size:10px;letter-spacing:3px;text-transform:uppercase;padding:5px 14px;}
+.b-active{background:var(--orange);color:#000;}
+.b-prog{border:1px solid var(--orange);color:var(--orange);}
+.b-concept{border:1px solid var(--text3);color:var(--text3);}
+
+/* tilt wrap */
+.proj-img-wrap{margin:24px 48px 0;height:500px;overflow:hidden;perspective:1200px;position:relative;}
+.proj-img{width:100%;height:100%;transform-style:preserve-3d;will-change:transform;position:relative;}
+
+/* Iron Palace visual */
+.vi{background:radial-gradient(ellipse at 15% 85%,rgba(120,50,10,.7) 0%,transparent 45%),radial-gradient(ellipse at 85% 15%,rgba(40,20,5,.95) 0%,transparent 55%),linear-gradient(145deg,#0e0906 0%,#130d08 35%,#1a1108 65%,#0a0704 100%);overflow:hidden;}
+.vi::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 64px,rgba(255,72,0,.025) 64px,rgba(255,72,0,.025) 65px),repeating-linear-gradient(90deg,transparent,transparent 64px,rgba(255,72,0,.025) 64px,rgba(255,72,0,.025) 65px);}
+.vi::after{content:'';position:absolute;bottom:0;left:0;right:0;height:260px;background:linear-gradient(to top,rgba(255,72,0,.18),transparent);}
+.vi-glow{position:absolute;bottom:20%;left:50%;transform:translateX(-50%);width:300px;height:2px;background:linear-gradient(90deg,transparent,rgba(255,72,0,.6),transparent);filter:blur(4px);}
+
+/* Ember Oak visual */
+.ve{background:radial-gradient(ellipse at 35% 45%,rgba(200,80,10,.55) 0%,transparent 50%),radial-gradient(ellipse at 75% 70%,rgba(150,55,5,.45) 0%,transparent 50%),radial-gradient(ellipse at 20% 80%,rgba(100,40,0,.4) 0%,transparent 40%),linear-gradient(145deg,#1e0d03 0%,#150a02 30%,#221104 60%,#100803 100%);overflow:hidden;}
+.ve::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 40% 35%,rgba(255,120,0,.1) 0%,transparent 45%),radial-gradient(ellipse at 70% 60%,rgba(200,80,0,.07) 0%,transparent 40%);}
+.ve::after{content:'';position:absolute;bottom:0;left:0;right:0;height:300px;background:linear-gradient(to top,rgba(160,50,0,.22),transparent);}
+.ve-warm{position:absolute;top:30%;left:55%;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,rgba(255,100,0,.18),transparent 70%);filter:blur(20px);}
+
+/* Gamma visual */
+.vg{background:radial-gradient(ellipse at 20% 50%,rgba(255,72,0,.06) 0%,transparent 45%),radial-gradient(ellipse at 80% 30%,rgba(255,72,0,.04) 0%,transparent 45%),#0d0d0d;overflow:hidden;}
+.vg::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 48px,rgba(255,255,255,.015) 48px,rgba(255,255,255,.015) 49px);}
+.vg-bars{position:absolute;bottom:20%;left:8%;display:flex;align-items:flex-end;gap:8px;opacity:.3;}
+.vg-bar{width:18px;background:var(--orange);border-radius:2px 2px 0 0;}
+
+.proj-live-btn{position:absolute;top:20px;right:20px;z-index:3;background:var(--orange);color:#000;font-family:var(--mono);font-size:10.5px;letter-spacing:3px;text-transform:uppercase;padding:9px 20px;text-decoration:none;display:inline-block;transition:background .2s,transform .15s;}
+.proj-live-btn:hover{background:#fff;transform:scale(1.03);}
+.proj-live-btn.off{background:transparent;border:1px solid var(--border2);color:var(--text3);pointer-events:none;}
+
+/* breakdown grid — the space between image and info */
+.proj-breakdown{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);margin:0 48px;border:1px solid var(--border);border-top:none;}
+.pbd{background:var(--surface);padding:28px;}
+.pbd-lbl{font-family:var(--mono);font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--text3);margin-bottom:10px;}
+.pbd-val{font-size:14px;line-height:1.65;color:var(--text2);}
+.pbd-val strong{color:var(--text);font-weight:600;}
+
+/* project info */
+.proj-info{padding:40px 48px 60px;}
+.proj-title{font-family:var(--display);font-size:clamp(32px,4vw,54px);font-weight:900;text-transform:uppercase;line-height:1;color:var(--text);margin-bottom:16px;}
+.proj-hook{font-size:17px;line-height:1.7;color:var(--text);font-weight:500;max-width:700px;margin-bottom:14px;}
+.proj-desc{font-family:var(--mono);font-size:13px;line-height:1.9;color:var(--text2);max-width:820px;margin-bottom:28px;}
+.proj-tags{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:28px;}
+.tag{font-family:var(--mono);font-size:9.5px;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border:1px solid var(--border2);padding:5px 14px;transition:border-color .2s,color .2s;}
+.proj-info:hover .tag{border-color:rgba(255,72,0,.25);color:var(--text);}
+.proj-cta{display:inline-flex;align-items:center;gap:10px;font-family:var(--mono);font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--orange);text-decoration:none;border-bottom:1px solid rgba(255,72,0,.3);padding-bottom:2px;transition:gap .2s,border-color .2s;}
+.proj-cta:hover{gap:16px;border-color:var(--orange);}
+.proj-cta.off{color:var(--text3);border-color:var(--border2);pointer-events:none;}
+
+/* project separator */
+.proj-sep{height:80px;display:flex;align-items:center;justify-content:center;gap:24px;background:var(--bg);border-bottom:1px solid var(--border);}
+.proj-sep-line{flex:1;max-width:200px;height:1px;background:var(--border);}
+.proj-sep-mark{font-family:var(--mono);font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--text3);}
+
+/* CONTACT */
+#contact{padding:100px 48px 90px;border-top:1px solid var(--border);position:relative;overflow:hidden;}
+#contact::before{content:'';position:absolute;bottom:-40%;right:-10%;width:50%;height:80%;background:radial-gradient(ellipse,rgba(255,72,0,.04) 0%,transparent 70%);pointer-events:none;}
+.contact-tagline{font-family:var(--display);font-size:clamp(28px,3vw,44px);font-weight:700;text-transform:uppercase;letter-spacing:-.5px;color:var(--text2);line-height:1.15;margin-bottom:48px;}
+.contact-tagline span{color:var(--text);}
+.contact-email{font-family:var(--display);font-size:clamp(32px,5.5vw,82px);font-weight:900;color:var(--orange);text-decoration:none;line-height:.95;letter-spacing:-2px;display:block;width:fit-content;margin-bottom:10px;position:relative;}
+.contact-email::after{content:'';position:absolute;bottom:-6px;left:0;right:0;height:2px;background:var(--orange);transform:scaleX(0);transform-origin:left;transition:transform .5s cubic-bezier(.23,1,.32,1);}
+.contact-email:hover::after{transform:scaleX(1);}
+.contact-dot{display:inline-block;width:13px;height:13px;background:var(--orange);border-radius:50%;vertical-align:middle;margin-left:6px;animation:pulse 2.5s infinite;}
+.contact-note{font-family:var(--mono);font-size:12px;color:var(--text3);letter-spacing:2px;margin-bottom:48px;display:flex;align-items:center;gap:10px;}
+.contact-note::before{content:'→';color:var(--orange);}
+.contact-links{display:flex;align-items:center;gap:32px;margin-top:48px;}
+.contact-link{font-family:var(--mono);font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--text3);text-decoration:none;border-bottom:1px solid var(--border2);padding-bottom:2px;transition:color .2s,border-color .2s;}
+.contact-link:hover{color:var(--text);border-color:var(--text2);}
+.contact-sep{width:1px;height:16px;background:var(--border2);}
+
+/* FOOTER */
+footer{padding:22px 48px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.ft-copy{font-family:var(--mono);font-size:10.5px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);}
+.ft-sq{width:8px;height:8px;background:var(--orange);}
+
+/* REVEAL */
+.r{opacity:0;transform:translateY(22px);transition:opacity .75s ease,transform .75s ease;}
+.r.in{opacity:1;transform:none;}
+.r2{opacity:0;transform:translateY(22px);transition:opacity .75s .15s ease,transform .75s .15s ease;}
+.r2.in{opacity:1;transform:none;}
+.r3{opacity:0;transform:translateY(22px);transition:opacity .75s .3s ease,transform .75s .3s ease;}
+.r3.in{opacity:1;transform:none;}
+
+/* MOBILE */
+@media(max-width:900px){
+  nav{padding:0 20px;}
+  .nav-meta,.nav-sep{display:none;}
+  .nav-r{gap:20px;}
+  #hero{padding:110px 20px 70px;}
+  .hero-scroll{left:20px;}
+  #about{padding:70px 20px;}
+  .about-grid{grid-template-columns:1fr;gap:32px;}
+  .stats-grid{grid-template-columns:repeat(2,1fr);}
+  .work-hdr{padding:60px 20px 40px;flex-direction:column;align-items:flex-start;gap:24px;}
+  .proj-top{padding:24px 20px 0;}
+  .proj-img-wrap{margin:20px 20px 0;height:340px;}
+  .proj-breakdown{grid-template-columns:1fr;margin:0 20px;}
+  .proj-info{padding:28px 20px 48px;}
+  .proj-sep{height:56px;}
+  #contact{padding:70px 20px;}
+  footer{padding:18px 20px;}
+  #cur,#cur-trail{display:none;}
+}
+</style>
+</head>
+<body>
+
+<div id="cur"></div>
+<div id="cur-trail"></div>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo"><div class="nav-sq"></div>The Monolith Protocol</a>
+  <div class="nav-r">
+    <a href="#about">About</a>
+    <a href="#work">Work</a>
+    <a href="#contact">Contact</a>
+    <div class="nav-sep"></div>
+    <span class="nav-meta">@themonolithprotocol</span>
+    <div class="nav-sep"></div>
+    <span class="nav-meta">EST. 2025</span>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <span class="hero-eyebrow">Design &amp; Development Collective</span>
+  <h1 class="hero-title">
+    <span class="wh">Building digital<br>systems that<br></span>
+    <span class="or">endure.</span>
+  </h1>
+  <p class="hero-sub">We engineer digital products that outlast trends — built with precision, shipped with purpose, and designed to grow with the people who use them.</p>
+  <div class="hero-cta">
+    <a href="#work" class="btn-pri">View Our Work →</a>
+    <a href="#contact" class="btn-sec">Get In Touch</a>
+  </div>
+  <div class="hero-dot"></div>
+  <div class="hero-scroll">Scroll to explore</div>
+  <div class="hero-rule"></div>
+</section>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="sec-label">About — Protocol</div>
+  <div class="about-grid">
+    <div>
+      <p class="about-text r">The Monolith Protocol is a design and development collective focused on building robust, scalable digital products. We approach every project with an engineering-first mindset — no shortcuts, no compromises.</p>
+      <p class="about-text r2" style="margin-top:20px;">From full-stack applications to brand systems, we deliver work that stands the test of time. Our process is methodical, our execution is precise, and our standards are non-negotiable.</p>
+    </div>
+    <div class="r3" style="display:flex;flex-direction:column;justify-content:flex-end;">
+      <p class="about-pull">Every product we build starts with one question:<br><strong>Will this still work flawlessly in five years?</strong><br>If the answer isn't yes — we rebuild it.</p>
+    </div>
+  </div>
+  <div class="stats-grid r">
+    <div class="stat"><div class="stat-num">03</div><div class="stat-lbl">Active Projects</div></div>
+    <div class="stat"><div class="stat-num">∞</div><div class="stat-lbl">Iterations</div></div>
+    <div class="stat"><div class="stat-num">24/7</div><div class="stat-lbl">Uptime Target</div></div>
+    <div class="stat"><div class="stat-num">0</div><div class="stat-lbl">Compromises</div></div>
+  </div>
+</section>
+
+<!-- WORK -->
+<section id="work">
+  <div class="work-hdr">
+    <div>
+      <div class="sec-label">Work — Selected Projects</div>
+      <div class="work-title">What we've<br><span>shipped.</span></div>
+    </div>
+    <div class="work-count">3 entries<br><span style="color:var(--text3)">2025 — 2026</span></div>
+  </div>
+
+  <!-- 001 THE IRON PALACE -->
+  <div class="project r">
+    <div class="proj-top">
+      <div class="proj-num">001 / 003</div>
+      <div class="proj-badge b-active">ACTIVE</div>
+    </div>
+    <div class="proj-img-wrap" id="t1">
+      <div class="proj-img vi" id="ti1"><div class="vi-glow"></div></div>
+      <a href="https://the-iron-palace.vercel.app" target="_blank" class="proj-live-btn">VIEW LIVE →</a>
+    </div>
+    <div class="proj-breakdown">
+      <div class="pbd">
+        <div class="pbd-lbl">What it is</div>
+        <div class="pbd-val"><strong>Elite athlete performance platform.</strong> A full diagnostic system for coaches and athletes — not just a tracker, but a command centre for the human body.</div>
+      </div>
+      <div class="pbd">
+        <div class="pbd-lbl">What makes it different</div>
+        <div class="pbd-val">A <strong>3D rotatable body canvas</strong> where athletes tap a muscle to log pain intensity. Coaches see every athlete's readiness score, HRV, and injury risk in real time.</div>
+      </div>
+      <div class="pbd">
+        <div class="pbd-lbl">Try this when you open it</div>
+        <div class="pbd-val">Sign in as a <strong>Coach</strong> and forge a Palace. Then open a new tab, sign in as an Athlete, join with the code. Watch the Legion dashboard update live.</div>
+      </div>
+    </div>
+    <div class="proj-info">
+      <h2 class="proj-title">The Iron Palace</h2>
+      <p class="proj-hook">The performance diagnostic platform elite athletes didn't know they needed — until now.</p>
+      <p class="proj-desc">Multi-tenant architecture built for 50+ athletes per coach. The Kinetic Alert engine detects injury risk patterns across consecutive days and fires load-reduction recommendations before something breaks. Palace State lets athletes map pain to exact coordinates on a 3D body model — data that watches, checklists can't capture. Zero frameworks. Zero backend. One file.</p>
+      <div class="proj-tags">
+        <span class="tag">Vanilla JS</span><span class="tag">3D Canvas</span>
+        <span class="tag">Multi-Tenant</span><span class="tag">Kinetic Alerts</span><span class="tag">Vercel</span>
+      </div>
+      <a href="https://the-iron-palace.vercel.app" target="_blank" class="proj-cta">Open The Iron Palace →</a>
+    </div>
+  </div>
+
+  <div class="proj-sep">
+    <div class="proj-sep-line"></div>
+    <div class="proj-sep-mark">Next Project</div>
+    <div class="proj-sep-line"></div>
+  </div>
+
+  <!-- 002 EMBER OAK -->
+  <div class="project r">
+    <div class="proj-top">
+      <div class="proj-num">002 / 003</div>
+      <div class="proj-badge b-prog">IN PROGRESS</div>
+    </div>
+    <div class="proj-img-wrap" id="t2">
+      <div class="proj-img ve" id="ti2"><div class="ve-warm"></div></div>
+      <a href="https://ember-oak-cafe-plum.vercel.app" target="_blank" class="proj-live-btn">VIEW LIVE →</a>
+    </div>
+    <div class="proj-breakdown">
+      <div class="pbd">
+        <div class="pbd-lbl">What it is</div>
+        <div class="pbd-val"><strong>Immersive café website</strong> built to feel like stepping through the front door — warm, textured, and alive with motion from the first pixel.</div>
+      </div>
+      <div class="pbd">
+        <div class="pbd-lbl">What makes it different</div>
+        <div class="pbd-val">Every scroll triggers a new moment. The <strong>custom cursor</strong>, parallax hero, and espresso-toned palette make this feel like a premium brand — not a £20 template.</div>
+      </div>
+      <div class="pbd">
+        <div class="pbd-lbl">Try this when you open it</div>
+        <div class="pbd-val"><strong>Scroll slowly.</strong> Notice how the page breathes. This is what every café owner wishes their website looked like but didn't know was possible.</div>
+      </div>
+    </div>
+    <div class="proj-info">
+      <h2 class="proj-title">Ember Oak Café</h2>
+      <p class="proj-hook">A café website that smells like coffee. Scroll-driven, warm, and built to turn visitors into regulars.</p>
+      <p class="proj-desc">Fully responsive with scroll-triggered animations throughout. Custom cursor reacts to interactive elements, creating an experience that feels alive. Parallax hero builds depth on every device. The menu layout was designed specifically to make every item look worth ordering — because good design sells.</p>
+      <div class="proj-tags">
+        <span class="tag">HTML</span><span class="tag">CSS</span>
+        <span class="tag">JavaScript</span><span class="tag">Scroll Animation</span><span class="tag">Custom Cursor</span>
+      </div>
+      <a href="https://ember-oak-cafe-plum.vercel.app" target="_blank" class="proj-cta">Step Inside →</a>
+    </div>
+  </div>
+
+  <div class="proj-sep">
+    <div class="proj-sep-line"></div>
+    <div class="proj-sep-mark">Next Project</div>
+    <div class="proj-sep-line"></div>
+  </div>
+
+  <!-- 003 PROJECT GAMMA -->
+  <div class="project r">
+    <div class="proj-top">
+      <div class="proj-num">003 / 003</div>
+      <div class="proj-badge b-concept">CONCEPT</div>
+    </div>
+    <div class="proj-img-wrap" id="t3">
+      <div class="proj-img vg" id="ti3">
+        <div class="vg-bars">
+          <div class="vg-bar" style="height:80px"></div>
+          <div class="vg-bar" style="height:120px"></div>
+          <div class="vg-bar" style="height:55px"></div>
+          <div class="vg-bar" style="height:145px"></div>
+          <div class="vg-bar" style="height:90px"></div>
+          <div class="vg-bar" style="height:110px"></div>
+          <div class="vg-bar" style="height:65px"></div>
+          <div class="vg-bar" style="height:130px"></div>
+        </div>
+      </div>
+      <span class="proj-live-btn off">IN DEVELOPMENT</span>
+    </div>
+    <div class="proj-breakdown">
+      <div class="pbd">
+        <div class="pbd-lbl">What it is</div>
+        <div class="pbd-val"><strong>Internal operations dashboard</strong> for real-time data visualization, workflow automation, and role-based team management at scale.</div>
+      </div>
+      <div class="pbd">
+        <div class="pbd-lbl">What it will do</div>
+        <div class="pbd-val">Live metric monitoring with <strong>smart alert systems</strong> — one screen that gives operations teams a single source of truth for everything that matters.</div>
+      </div>
+      <div class="pbd">
+        <div class="pbd-lbl">Status</div>
+        <div class="pbd-val">Architecture phase. <strong>Launching Q3 2026.</strong> Reach out if you want an early access spot — we're selective about who gets in first.</div>
+      </div>
+    </div>
+    <div class="proj-info">
+      <h2 class="proj-title">Project Gamma</h2>
+      <p class="proj-hook">The dashboard that eliminates the chaos of running a team at speed.</p>
+      <p class="proj-desc">Role-based access control means every team member sees exactly what they need — nothing more, nothing less. Live alert systems catch anomalies before they become incidents. Built for organisations that can't afford downtime or missed signals, and won't compromise on either.</p>
+      <div class="proj-tags">
+        <span class="tag">Dashboard</span><span class="tag">Data Viz</span>
+        <span class="tag">API</span><span class="tag">Auth</span><span class="tag">Real-Time</span>
+      </div>
+      <span class="proj-cta off">Coming Q3 2026</span>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="sec-label r">Contact — Get In Touch</div>
+  <p class="contact-tagline r">Have a project in mind?<br><span>Let's build something that endures.</span></p>
+  <a href="mailto:themonolithprotocol@gmail.com" class="contact-email r2">
+    themonolithprotocol@gmail.com<span class="contact-dot"></span>
+  </a>
+  <p class="contact-note r3">We typically respond within 24 hours</p>
+  <div class="contact-links r3">
+    <a href="https://instagram.com/themonolithprotocol" target="_blank" class="contact-link">Instagram →</a>
+    <div class="contact-sep"></div>
+    <a href="#work" class="contact-link">View Work →</a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="ft-copy">© 2026 The Monolith Protocol</div>
+  <div class="ft-sq"></div>
+</footer>
+
+<script>
+// CURSOR
+const cur=document.getElementById('cur'),trail=document.getElementById('cur-trail');
+let mx=0,my=0,cx=0,cy=0,tx=0,ty=0;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;});
+(function anim(){
+  cx+=(mx-cx)*.16;cy+=(my-cy)*.16;
+  tx+=(mx-tx)*.07;ty+=(my-ty)*.07;
+  cur.style.left=cx+'px';cur.style.top=cy+'px';
+  trail.style.left=tx+'px';trail.style.top=ty+'px';
+  requestAnimationFrame(anim);
+})();
+document.querySelectorAll('a,button,.stat,.proj-img-wrap,.tag,.pbd').forEach(el=>{
+  el.addEventListener('mouseenter',()=>cur.classList.add('grow'));
+  el.addEventListener('mouseleave',()=>cur.classList.remove('grow'));
+});
+
+// TILT
+function tilt(wId,iId){
+  const w=document.getElementById(wId),img=document.getElementById(iId);
+  if(!w||!img)return;
+  w.addEventListener('mousemove',e=>{
+    const r=w.getBoundingClientRect();
+    const x=(e.clientX-r.left)/r.width-.5;
+    const y=(e.clientY-r.top)/r.height-.5;
+    img.style.transition='transform .06s linear';
+    img.style.transform=`rotateY(${x*12}deg) rotateX(${-y*7}deg) scale(1.04)`;
+  });
+  w.addEventListener('mouseleave',()=>{
+    img.style.transition='transform .7s cubic-bezier(.23,1,.32,1)';
+    img.style.transform='rotateY(0) rotateX(0) scale(1)';
+  });
+}
+tilt('t1','ti1');tilt('t2','ti2');tilt('t3','ti3');
+
+// SCROLL REVEAL
+const obs=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');obs.unobserve(e.target);}});
+},{threshold:.06});
+document.querySelectorAll('.r,.r2,.r3').forEach(el=>obs.observe(el));
+
+// SMOOTH SCROLL
+document.querySelectorAll('a[href^="#"]').forEach(a=>{
+  a.addEventListener('click',e=>{
+    e.preventDefault();
+    const t=document.querySelector(a.getAttribute('href'));
+    if(t)t.scrollIntoView({behavior:'smooth'});
+  });
+});
+</script>
+</body>
+</html>
